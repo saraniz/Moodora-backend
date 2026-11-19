@@ -11,89 +11,138 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import environ
+
+# This file is called "settings.py". It tells Django how to run this project.
+# It is plain Python code: each line sets a variable, and Django reads those
+# variables when the server starts.
+# Use single quotes ('') or double quotes ("") around text, square brackets []
+# around lists, and curly braces {} around dictionaries.
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+# __file__ is the path to this file. .resolve().parent.parent goes up two folders
+# to find the project root directory.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Creates an environment configuration object. We use this object to read environment variables.
+env = environ.Env()
+env.read_env(BASE_DIR / ".env") #read env variables from .env file. / is Python's pathlib path-joining operator.
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
+# SECRET_KEY is a random string used to sign cookies and protect against attacks.
+# Never share it or commit it to version control in a real project.
 SECRET_KEY = 'django-insecure-qn!*hb&qt%o9_^7w7+b!4lnxyx-g__%$cn*gx3di=dg9=8721@'
 
 # SECURITY WARNING: don't run with debug turned on in production!
+# DEBUG shows detailed error pages when something goes wrong.
+# True = show errors (good while developing). False = hide errors (required in production).
 DEBUG = True
 
+# ALLOWED_HOSTS is a list of website addresses allowed to serve this app.
+# Empty list [] means only local development addresses are allowed.
+# Add your domain here (e.g. ['example.com']) before going live.
 ALLOWED_HOSTS = []
 
 
 # Application definition
 
+# INSTALLED_APPS lists all Django apps and third-party packages used by this project.
+# Each item is a string (in quotes) naming an app. Order matters: some apps depend on others.
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
+    'django.contrib.admin',      # Built-in admin site for managing data
+    'django.contrib.auth',       # User accounts and login system
+    'django.contrib.contenttypes',  # Links models to content types
+    'django.contrib.sessions',   # Stores user session data across requests
+    'django.contrib.messages',   # Shows one-time messages to users
+    'django.contrib.staticfiles',# Serves CSS, JavaScript, and images
+
+    'rest_framework',
+    'corsheaders',
 ]
 
+# MIDDLEWARE is a list of components that process every request and response.
+# They run in order, from top to bottom, like a chain. Each one can change
+# the request before it reaches a view, or change the response before it goes back.
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.security.SecurityMiddleware',          # Adds security headers
+    'django.contrib.sessions.middleware.SessionMiddleware',   # Handles user sessions
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',              # Common URL handling
+    'django.middleware.csrf.CsrfViewMiddleware',              # Protects forms from attacks
+    'django.contrib.auth.middleware.AuthenticationMiddleware',# Identifies the logged-in user
+    'django.contrib.messages.middleware.MessageMiddleware',   # Handles user messages
+    'django.middleware.clickjacking.XFrameOptionsMiddleware', # Prevents clickjacking
 ]
 
+# ROOT_URLCONF tells Django which file contains the URL routes (web addresses).
+# 'config.urls' means the urls.py file inside the config folder.
 ROOT_URLCONF = 'config.urls'
 
+# TEMPLATES configures how Django renders HTML pages.
+# It is a list with one dictionary. The dictionary tells Django which template
+# engine to use, where to look for HTML files, and which context processors to run.
 TEMPLATES = [
     {
+        # The template engine to use. Django's built-in engine is the standard choice.
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        # DIRS is a list of folders where Django looks for HTML templates.
+        # Empty list [] means it only looks inside each app's templates folder.
         'DIRS': [],
+        # APP_DIRS = True tells Django to look for templates inside each installed app.
         'APP_DIRS': True,
         'OPTIONS': {
+            # context_processors add extra information to every template automatically.
             'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.request',  # Current web request info
+                'django.contrib.auth.context_processors.auth', # Logged-in user info
+                'django.contrib.messages.context_processors.messages', # User messages
             ],
         },
     },
 ]
 
+# WSGI_APPLICATION points to the WSGI config file that web servers use to run Django.
+# 'config.wsgi.application' means the application object in config/wsgi.py.
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# DATABASES tells Django where to store data. It is a dictionary with one entry
+# called 'default' (the main database).
+# env.db("DATABASE_URL") reads the DATABASE_URL environment variable (from .env)
+# and returns a ready-to-use database config dict with ENGINE, NAME, etc.
+# If DATABASE_URL is not set, it falls back to a local SQLite file.
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': env.db("DATABASE_URL", default="sqlite:///db.sqlite3")
 }
 
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
+# AUTH_PASSWORD_VALIDATORS is a list of rules that new passwords must pass.
+# Each item is a dictionary with a NAME pointing to a validator class.
 AUTH_PASSWORD_VALIDATORS = [
     {
+        # Checks the password is not too similar to the user's personal info.
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
     {
+        # Checks the password meets a minimum length.
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
     },
     {
+        # Checks the password is not a commonly used password.
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
     {
+        # Checks the password is not entirely numeric.
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
@@ -102,21 +151,48 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
+# LANGUAGE_CODE sets the default language for the site. 'en-us' means US English.
 LANGUAGE_CODE = 'en-us'
 
+# TIME_ZONE sets the default time zone. 'UTC' is Coordinated Universal Time.
 TIME_ZONE = 'UTC'
 
+# USE_I18N = True turns on translation support so the site can be shown in other languages.
 USE_I18N = True
 
+# USE_TZ = True stores times with time zone info so they display correctly worldwide.
 USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
+# STATIC_URL is the web address prefix used to serve static files (CSS, JS, images).
+# 'static/' means files are available at /static/filename.
 STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
+# DEFAULT_AUTO_FIELD sets the type of the automatic ID field on new database models.
+# BigAutoField uses large integers that can hold many rows without running out.
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+    ],
+}
